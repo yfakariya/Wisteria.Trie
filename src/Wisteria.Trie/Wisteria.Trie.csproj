@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Wisteria</RootNamespace>
+    <TargetFrameworks>
+      <!--netstandard2.0;-->netcoreapp2.1</TargetFrameworks>
+    <!-- TEMP -->
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>
