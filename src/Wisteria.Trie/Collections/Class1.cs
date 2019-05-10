@@ -130,6 +130,7 @@ namespace Wisteria.Collections
 								Value = value,
 								HasValue = true
 							};
+
 						var targetIndex = ~foundIndex;
 						currentNode.ChildPrefixes.Insert(targetIndex, currentKey[0]);
 						currentNode.Children.Insert(targetIndex, newNode);
@@ -178,7 +179,7 @@ namespace Wisteria.Collections
 						currentNode.HasValue = false;
 
 						Debug.Assert(rangeOfNewParentForCurrentChildren[0] != currentKey[0], "rangeOfNewParentForCurrentChildren[0] != currentKey[0]");
-						if (rangeOfNewParentForCurrentChildren[0] < currentKey[0])
+						if (rangeOfNewParentForCurrentChildren[0] > currentKey[0])
 						{
 							currentNode.ChildPrefixes =
 								new List<byte>(2)
@@ -343,55 +344,61 @@ namespace Wisteria.Collections
 			{
 				this._context = new Stack<(Node, int)>();
 				this._trie = trie;
-				this._currentNode = trie._root;
+				this._currentNode = null;
+			}
+
+#warning TODO: refactor
+			private bool FindNode()
+			{
+				if (this._currentNode == null)
+				{
+					this._currentNode = this._trie._root;	
+					return true;
+				}
+
+				if (this._currentNode.Children.Count > 0)
+				{
+					// go to first child
+					var firstChild = this._currentNode.Children[0];
+					this._context.Push((this._currentNode, 0));
+					this._currentNode = firstChild;		
+					return true;
+				}
+
+				// back to root
+				while (this._context.Count > 0)
+				{
+					// back to parent
+					(Node parent, int indexInParent) = this._context.Pop();
+
+					// go to next sibling if exists
+					indexInParent++;
+					if (parent.Children.Count > indexInParent)
+					{
+						this._context.Push((parent, indexInParent));
+						this._currentNode = parent.Children[indexInParent];
+						return true;
+					}
+					else
+					{
+						// all siblings have been traversed, so go to grand parent.
+						continue; // inner loop
+					}
+				} // inner loop
+
+				this._currentNode = null;
+				return false;
 			}
 
 			public bool MoveNext()
 			{
-				while (this._currentNode != null)
+				while (this.FindNode())
 				{
-					if (this._currentNode.Children.Count > 0)
+					if (this._currentNode.HasValue)
 					{
-						// go to first child
-						var firstChild = this._currentNode.Children[0];
-						this._context.Push((this._currentNode, 0));
-						this._currentNode = firstChild;
-
-						if (this._currentNode.HasValue)
-						{
-							return true;
-						}
-
-						// recursively search descendants until any value is set...
-						continue; // outer loop.
+						return true;
 					}
-					else
-					{
-						// back to root
-						while (this._context.Count > 0)
-						{
-							// back to parent
-							(Node parent, int indexInParent) = this._context.Pop();
-
-							// go to next sibling if exists
-							indexInParent++;
-							if (parent.Children.Count > indexInParent)
-							{
-								this._context.Push((parent, indexInParent));
-								this._currentNode = parent.Children[indexInParent];
-								break; // break inner loop.
-							}
-							else
-							{
-								// all siblings have been traversed, so go to grand parent.
-								continue; // inner loop
-							}
-						} // inner loop
-
-						// backed to the root...
-						this._currentNode = null;
-					}
-				} // outer loop
+				}
 
 				return false;
 			}
