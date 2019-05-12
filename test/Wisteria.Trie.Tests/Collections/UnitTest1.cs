@@ -30,5 +30,7 @@ namespace Wisteria.Collections
                 Is.EqualTo(new [] {"ABC", "ABE", "AFG", "HIJ"})
             );
         }
+
+		// TODO: simple perf test for netapp3.0 Dictionary tuned with Ben
     }
 }
